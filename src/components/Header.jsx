@@ -1,5 +1,6 @@
 import React from 'react';
-import { Truck, ShieldCheck } from 'lucide-react';
+import { ShieldCheck } from 'lucide-react';
+import BoxIcon from '../assets/Box.png';
 
 export default function Header({ movil, ofToken }) {
   return (
@@ -15,18 +16,17 @@ export default function Header({ movil, ofToken }) {
       <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
         <div style={{
           backgroundColor: '#10b981',
-          color: '#000',
-          padding: '0.5rem',
+          padding: '0.4rem',
           borderRadius: '10px',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center'
         }}>
-          <Truck size={22} />
+          <img src={BoxIcon} alt="Box" style={{ width: 26, height: 26, objectFit: 'contain' }} />
         </div>
         <div>
           <h1 style={{ fontSize: '1.05rem', fontWeight: 800, margin: 0, color: '#fff', letterSpacing: '-0.01em' }}>
-            GestionSTK Track
+            Gestion Track
           </h1>
           <p style={{ fontSize: '0.75rem', color: '#94a3b8', margin: 0 }}>
             {movil ? `Móvil asignado: ${movil}` : 'Seguimiento en vivo'}
