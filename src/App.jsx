@@ -87,15 +87,17 @@ export default function App() {
 
   if (isFinalState) {
     const isSuccess = status === 'ENTREGADO';
+    const ofDisplay = params.token ? params.token.split('_')[0] : '';
     return (
       <div style={{
         display: 'flex',
         flexDirection: 'column',
-        height: '100vh',
+        minHeight: '100vh',
         width: '100vw',
         backgroundColor: '#0f172a',
         color: '#f8fafc',
-        fontFamily: 'Inter, system-ui, sans-serif'
+        fontFamily: 'Inter, system-ui, sans-serif',
+        overflowY: 'auto'
       }}>
         <Header movil={params.movil} ofToken={params.token} />
 
@@ -105,102 +107,80 @@ export default function App() {
           flexDirection: 'column',
           alignItems: 'center',
           justifyContent: 'center',
-          padding: '1.5rem',
-          maxWidth: '480px',
+          padding: '1.25rem 1rem',
+          maxWidth: '440px',
           margin: '0 auto',
           width: '100%',
-          boxSizing: 'border-box'
+          boxSizing: 'border-box',
+          gap: '0.75rem'
         }}>
-          {/* Card Premium de Estado Finalizado */}
+          {/* Card Estado */}
           <div style={{
             backgroundColor: '#1e293b',
             border: `1px solid ${isSuccess ? '#10b981' : '#ef4444'}`,
-            borderRadius: '24px',
-            padding: '2.5rem 1.5rem',
+            borderRadius: '20px',
+            padding: '1.75rem 1.25rem',
             textAlign: 'center',
             width: '100%',
-            boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.5)',
             boxSizing: 'border-box',
-            marginBottom: '2rem'
           }}>
             <div style={{
               display: 'inline-flex',
-              padding: '1rem',
+              padding: '0.75rem',
               borderRadius: '50%',
               backgroundColor: isSuccess ? 'rgba(16, 185, 129, 0.15)' : 'rgba(239, 68, 68, 0.15)',
               color: isSuccess ? '#10b981' : '#ef4444',
-              marginBottom: '1.5rem'
+              marginBottom: '1rem'
             }}>
-              {isSuccess ? <CheckCircle size={48} /> : <PackageX size={48} />}
+              {isSuccess ? <CheckCircle size={40} /> : <PackageX size={40} />}
             </div>
 
-            <h2 style={{
-              fontSize: '1.5rem',
-              fontWeight: 800,
-              margin: '0 0 0.75rem 0',
-              letterSpacing: '-0.025em'
-            }}>
+            <h2 style={{ fontSize: '1.25rem', fontWeight: 800, margin: '0 0 0.4rem 0' }}>
               {isSuccess ? '¡Pedido Entregado!' : 'Pedido Devuelto'}
             </h2>
 
-            <p style={{
-              fontSize: '0.95rem',
-              color: '#94a3b8',
-              lineHeight: '1.6',
-              margin: '0 0 1.5rem 0'
-            }}>
-              {isSuccess
-                ? 'El repartidor ha completado la entrega de tu pedido exitosamente. ¡Muchas gracias por tu preferencia!'
-                : `La orden de flete no pudo ser completada. Estado registrado: ${status}.`}
+            <p style={{ fontSize: '0.85rem', color: '#94a3b8', margin: '0 0 1.1rem 0', lineHeight: '1.5' }}>
+              {isSuccess ? '¡Gracias por su preferencia!' : `Estado: ${status}`}
             </p>
 
             <div style={{
               borderTop: '1px solid #334155',
-              paddingTop: '1.25rem',
+              paddingTop: '0.85rem',
               display: 'flex',
-              flexDirection: 'column',
-              gap: '0.4rem',
-              fontSize: '0.8rem',
+              justifyContent: 'space-between',
+              fontSize: '0.75rem',
               color: '#64748b'
             }}>
-              <div>Orden de Flete: <strong style={{ color: '#f8fafc' }}>{params.token}</strong></div>
-              <div>Móvil Asociado: <strong style={{ color: '#f8fafc' }}>{params.movil}</strong></div>
+              <span>OF: <strong style={{ color: '#f8fafc' }}>{ofDisplay}</strong></span>
+              <span>Móvil: <strong style={{ color: '#f8fafc' }}>{params.movil}</strong></span>
             </div>
           </div>
 
-          {/* Espacio Publicitario / Sponsor Slot */}
+          {/* Slot Publicitario */}
           <div style={{
             width: '100%',
             backgroundColor: '#1e293b',
             border: '1px dashed #475569',
-            borderRadius: '16px',
-            padding: '1rem',
+            borderRadius: '14px',
+            padding: '0.75rem 1rem',
             textAlign: 'center',
             boxSizing: 'border-box'
           }}>
-            <span style={{
-              display: 'inline-block',
-              fontSize: '0.65rem',
-              fontWeight: 700,
-              color: '#64748b',
-              textTransform: 'uppercase',
-              letterSpacing: '0.05em',
-              marginBottom: '0.5rem'
-            }}>
+            <div style={{ fontSize: '0.6rem', fontWeight: 700, color: '#475569', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '0.4rem' }}>
               Publicidad / Novedades
-            </span>
+            </div>
             <div style={{
-              height: '80px',
+              height: '60px',
               backgroundColor: '#0f172a',
               borderRadius: '8px',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
-              color: '#475569',
-              fontSize: '0.85rem',
+              color: '#334155',
+              fontSize: '0.8rem',
               fontStyle: 'italic'
             }}>
-              Espacio disponible para promociones
+              Espacio disponible
             </div>
           </div>
         </div>
