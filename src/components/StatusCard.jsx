@@ -1,7 +1,7 @@
 import React from 'react';
 import { CheckCircle2, Clock, Navigation, AlertTriangle, PackageX } from 'lucide-react';
 
-export default function StatusCard({ status, speed, lastSeen }) {
+export default function StatusCard({ status, speed, lastSeen, isStale }) {
   if (status === 'ENTREGADO') {
     return (
       <div style={cardStyle}>
@@ -42,19 +42,28 @@ export default function StatusCard({ status, speed, lastSeen }) {
     return (
       <div style={cardStyle}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.5rem' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: '#3b82f6' }}>
-            <Navigation size={20} className="animate-pulse" />
-            <span style={{ fontSize: '0.9rem', fontWeight: 700, color: '#fff' }}>Repartidor en Camino</span>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: isStale ? '#ef4444' : '#3b82f6' }}>
+            {isStale ? (
+              <>
+                <AlertTriangle size={20} className="animate-pulse" />
+                <span style={{ fontSize: '0.9rem', fontWeight: 700, color: '#fff' }}>Última posición conocida</span>
+              </>
+            ) : (
+              <>
+                <Navigation size={20} className="animate-pulse" />
+                <span style={{ fontSize: '0.9rem', fontWeight: 700, color: '#fff' }}>Repartidor en Camino</span>
+              </>
+            )}
           </div>
           <span style={{
-            backgroundColor: '#1e3a8a',
-            color: '#93c5fd',
+            backgroundColor: isStale ? '#991b1b' : '#1e3a8a',
+            color: isStale ? '#fecaca' : '#93c5fd',
             fontSize: '0.7rem',
             padding: '0.25rem 0.6rem',
             borderRadius: '12px',
             fontWeight: 700
           }}>
-            EN VIVO
+            {isStale ? 'SIN SEÑAL' : 'EN VIVO'}
           </span>
         </div>
 

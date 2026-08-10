@@ -13,7 +13,19 @@ export default function App() {
   const [lastSeen, setLastSeen] = useState('');
   const [errorMsg, setErrorMsg] = useState('');
   const [msgCount, setMsgCount] = useState(0);
+  const [isStale, setIsStale] = useState(false);
   const channelRef = useRef(null);
+  const staleTimerRef = useRef(null);
+
+  const resetStaleTimer = () => {
+    if (staleTimerRef.current) {
+      clearTimeout(staleTimerRef.current);
+    }
+    setIsStale(false);
+    staleTimerRef.current = setTimeout(() => {
+      setIsStale(true);
+    }, 20000); // 20 segundos
+  };
 
   useEffect(() => {
     const searchParams = new URLSearchParams(window.location.search);
@@ -41,6 +53,7 @@ export default function App() {
         if (!payload) return;
 
         setMsgCount(c => c + 1);
+        resetStaleTimer();
 
         const ofStatus = payload.ofs ? payload.ofs[token] : null;
 
@@ -58,12 +71,14 @@ export default function App() {
 
         if (ofStatus === 'ENTREGADO' || ofStatus === 'RECHAZADO') {
           console.log('🏁 [GestionTrack] OF finalizada, desconectando canal');
+          if (staleTimerRef.current) clearTimeout(staleTimerRef.current);
           channel.unsubscribe();
         }
       })
       .subscribe();
 
     return () => {
+      if (staleTimerRef.current) clearTimeout(staleTimerRef.current);
       supabase.removeChannel(channel);
     };
   }, []);
@@ -205,7 +220,7 @@ export default function App() {
 
       <main style={{ flex: 1, position: 'relative', overflow: 'hidden' }}>
         <MapView coords={coords} movil={params.movil} />
-        <StatusCard status={status} speed={speed} lastSeen={lastSeen} />
+        <StatusCard status={status} speed={speed} lastSeen={lastSeen} isStale={isStale} />
       </main>
     </div>
   );
