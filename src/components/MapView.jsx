@@ -1,13 +1,15 @@
 import React, { useEffect } from 'react';
 import { MapContainer, TileLayer, Marker, Popup, useMap } from 'react-leaflet';
 import L from 'leaflet';
+import DriverIcon from '../assets/icon.png';
 
-// Icono personalizado para el vehículo
-const truckIcon = L.divIcon({
-  className: 'truck-marker-icon',
-  html: `<div class="truck-pulse">🚚</div>`,
-  iconSize: [42, 42],
-  iconAnchor: [21, 21]
+// Icono personalizado para el vehículo usando el branding de GestionSTK
+const vehicleIcon = L.icon({
+  iconUrl: DriverIcon,
+  iconSize: [40, 40],
+  iconAnchor: [20, 20],
+  popupAnchor: [0, -20],
+  className: 'vehicle-marker-icon'
 });
 
 function RecenterMap({ coords }) {
@@ -39,7 +41,7 @@ export default function MapView({ coords, movil }) {
         
         {coords && coords.lat && (
           <>
-            <Marker position={[coords.lat, coords.lng]} icon={truckIcon}>
+            <Marker position={[coords.lat, coords.lng]} icon={vehicleIcon}>
               <Popup>
                 <strong>Repartidor ({movil || 'Móvil'})</strong><br />
                 En trayecto de entrega
