@@ -16,7 +16,8 @@ function RecenterMap({ coords }) {
   const map = useMap();
   useEffect(() => {
     if (coords && coords.lat && coords.lng) {
-      map.setView([coords.lat, coords.lng], 15, { animate: true });
+      const currentZoom = map.getZoom();
+      map.setView([coords.lat, coords.lng], currentZoom, { animate: true });
     }
   }, [coords, map]);
   return null;
