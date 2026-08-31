@@ -59,6 +59,8 @@ export default function App() {
 
         if (ofStatus) {
           setStatus(ofStatus);
+        } else if (payload.coords) {
+          setStatus('EN_RUTA');
         }
 
         if (payload.coords) {
