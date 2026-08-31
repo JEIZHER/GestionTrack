@@ -43,6 +43,10 @@ function MapController({ coords }) {
 export default function MapView({ coords, movil }) {
   const mapRef = useRef(null);
   const defaultPos = coords && coords.lat ? [coords.lat, coords.lng] : [-34.1701, -70.7408];
+  const cartoApiKey = import.meta.env.VITE_CARTO_API_KEY || '';
+  const tileUrl = cartoApiKey
+    ? `https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png?key=${cartoApiKey}`
+    : "https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png";
 
   const handleRecenter = () => {
     if (mapRef.current && coords && coords.lat && coords.lng) {
@@ -61,8 +65,8 @@ export default function MapView({ coords, movil }) {
         style={{ width: '100%', height: '100%' }}
       >
         <TileLayer
-          attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
-          url="https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png"
+          attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>, &copy; <a href="https://carto.com/attributions">CARTO</a>'
+          url={tileUrl}
         />
         
         {coords && coords.lat && (
