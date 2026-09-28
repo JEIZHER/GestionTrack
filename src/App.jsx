@@ -5,6 +5,39 @@ import MapView from './components/MapView';
 import StatusCard from './components/StatusCard';
 import { AlertCircle, CheckCircle, PackageX } from 'lucide-react';
 
+// Helper para verificar si la OF (token) está presente en las pendientes del móvil
+function checkIsOfPending(ofsPendientes, token) {
+  if (!Array.isArray(ofsPendientes)) return false;
+  if (!token) return ofsPendientes.length > 0;
+
+  const cleanToken = String(token).trim().toLowerCase();
+  const tokenBase = cleanToken.split('_')[0];
+
+  return ofsPendientes.some(item => {
+    if (!item) return false;
+
+    if (typeof item === 'string') {
+      const cleanItem = item.trim().toLowerCase();
+      const itemBase = cleanItem.split('_')[0];
+      return cleanItem === cleanToken || itemBase === tokenBase || cleanToken.startsWith(cleanItem);
+    }
+
+    if (typeof item === 'object') {
+      const itemToken = String(item.token || '').trim().toLowerCase();
+      const itemOf = String(item.of || item.orden_flete || '').trim().toLowerCase();
+
+      return (
+        (itemToken && itemToken === cleanToken) ||
+        (itemOf && itemOf === cleanToken) ||
+        (itemOf && itemOf === tokenBase) ||
+        (cleanToken && itemOf && cleanToken.startsWith(itemOf))
+      );
+    }
+
+    return false;
+  });
+}
+
 export default function App() {
   const [params, setParams] = useState({ movil: '', token: '' });
   const [coords, setCoords] = useState(null);
@@ -41,47 +74,97 @@ export default function App() {
 
     setParams({ movil, token });
 
-    const channelName = `movil-${movil}`;
-    const channel = supabase.channel(channelName, {
-      config: { broadcast: { self: false } }
-    });
+    const handleRowUpdate = (row) => {
+      if (!row) return;
+
+      setMsgCount(c => c + 1);
+      resetStaleTimer();
+
+      const lat = parseFloat(row.lat);
+      const lng = parseFloat(row.lng);
+      const ofsPendientes = row.ofs_pendientes || [];
+
+      // Actualizar coordenadas solo si son válidas y distintas de 0.0 (posición limpia)
+      if (lat && lng && (lat !== 0 || lng !== 0)) {
+        setCoords({ lat, lng });
+        setSpeed(row.speed || 0);
+      } else {
+        setCoords(null);
+      }
+
+      const ts = row.updated_at ? new Date(row.updated_at) : new Date();
+      setLastSeen(ts.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' }));
+
+      // Verificar si la OF requerida sigue pendiente para este móvil
+      const isPending = checkIsOfPending(ofsPendientes, token);
+
+      if (isPending) {
+        setStatus('EN_RUTA');
+      } else {
+        console.log('🏁 [GestionTrack] La OF ya no está en pendientes -> ENTREGADO');
+        setStatus('ENTREGADO');
+      }
+    };
+
+    // 1. Consulta inicial a la tabla posiciones_usuarios
+    const fetchInitialPosition = async () => {
+      try {
+        const { data, error } = await supabase
+          .from('posiciones_usuarios')
+          .select('*')
+          .or(`movil_id.eq.${movil},movil_id.ilike.%${movil}%`)
+          .limit(1)
+          .maybeSingle();
+
+        if (error) {
+          console.warn('⚠️ [GestionTrack] Error al consultar posiciones_usuarios:', error);
+          setErrorMsg('Error al consultar el servicio de seguimiento.');
+          return;
+        }
+
+        if (!data) {
+          console.warn('⚠️ [GestionTrack] Móvil no encontrado en posiciones_usuarios:', movil);
+          setErrorMsg(`No hay información de seguimiento activa para el móvil ${movil}.`);
+          return;
+        }
+
+        handleRowUpdate(data);
+      } catch (err) {
+        console.error('❌ [GestionTrack] Excepción consultando posición:', err);
+      }
+    };
+
+    fetchInitialPosition();
+
+    // 2. Suscripción en tiempo real (Realtime Postgres Changes)
+    const channel = supabase
+      .channel(`posiciones_usuarios_${movil}`)
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'posiciones_usuarios',
+          filter: `movil_id=eq.${movil}`,
+        },
+        (payload) => {
+          console.log('⚡ [GestionTrack] Realtime postgres_changes:', payload);
+          if (payload.new) {
+            handleRowUpdate(payload.new);
+          }
+        }
+      )
+      .subscribe((subStatus) => {
+        console.log('📡 [GestionTrack] Estado suscripción Realtime:', subStatus);
+      });
 
     channelRef.current = channel;
 
-    channel
-      .on('broadcast', { event: 'location_update' }, ({ payload }) => {
-        if (!payload) return;
-
-        setMsgCount(c => c + 1);
-        resetStaleTimer();
-
-        const ofStatus = payload.ofs ? payload.ofs[token] : null;
-
-        if (ofStatus) {
-          setStatus(ofStatus);
-        } else if (payload.coords) {
-          setStatus('EN_RUTA');
-        }
-
-        if (payload.coords) {
-          setCoords({ ...payload.coords });
-          setSpeed(payload.coords.speed || 0);
-        }
-
-        const ts = payload.timestamp ? new Date(payload.timestamp) : new Date();
-        setLastSeen(ts.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' }));
-
-        if (ofStatus === 'ENTREGADO' || ofStatus === 'RECHAZADO') {
-          console.log('🏁 [GestionTrack] OF finalizada, desconectando canal');
-          if (staleTimerRef.current) clearTimeout(staleTimerRef.current);
-          channel.unsubscribe();
-        }
-      })
-      .subscribe();
-
     return () => {
       if (staleTimerRef.current) clearTimeout(staleTimerRef.current);
-      supabase.removeChannel(channel);
+      if (channelRef.current) {
+        supabase.removeChannel(channelRef.current);
+      }
     };
   }, []);
 
