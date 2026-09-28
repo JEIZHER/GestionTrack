@@ -46,19 +46,7 @@ export default function App() {
   const [lastSeen, setLastSeen] = useState('');
   const [errorMsg, setErrorMsg] = useState('');
   const [msgCount, setMsgCount] = useState(0);
-  const [isStale, setIsStale] = useState(false);
   const channelRef = useRef(null);
-  const staleTimerRef = useRef(null);
-
-  const resetStaleTimer = () => {
-    if (staleTimerRef.current) {
-      clearTimeout(staleTimerRef.current);
-    }
-    setIsStale(false);
-    staleTimerRef.current = setTimeout(() => {
-      setIsStale(true);
-    }, 20000); // 20 segundos
-  };
 
   useEffect(() => {
     const searchParams = new URLSearchParams(window.location.search);
@@ -78,7 +66,6 @@ export default function App() {
       if (!row) return;
 
       setMsgCount(c => c + 1);
-      resetStaleTimer();
 
       const lat = parseFloat(row.lat);
       const lng = parseFloat(row.lng);
@@ -161,7 +148,6 @@ export default function App() {
     channelRef.current = channel;
 
     return () => {
-      if (staleTimerRef.current) clearTimeout(staleTimerRef.current);
       if (channelRef.current) {
         supabase.removeChannel(channelRef.current);
       }
@@ -305,7 +291,7 @@ export default function App() {
 
       <main style={{ flex: 1, position: 'relative', overflow: 'hidden' }}>
         <MapView coords={coords} movil={params.movil} />
-        <StatusCard status={status} speed={speed} lastSeen={lastSeen} isStale={isStale} />
+        <StatusCard status={status} speed={speed} lastSeen={lastSeen} />
       </main>
     </div>
   );
